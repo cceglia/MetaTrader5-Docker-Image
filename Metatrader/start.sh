@@ -4,10 +4,10 @@
 mt5file='/config/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe'
 WINEPREFIX='/config/.wine'
 wine_executable="wine"
-metatrader_version="5.0.36"
+metatrader_version="5.0.4874"
 mt5server_port="8001"
 mono_url="https://dl.winehq.org/wine/wine-mono/8.0.0/wine-mono-8.0.0-x86.msi"
-python_url="https://www.python.org/ftp/python/3.9.0/python-3.9.0.exe"
+python_url="https://www.python.org/ftp/python/3.9.0/python-3.9.0-amd64.exe"
 mt5setup_url="https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe"
 
 # Function to display a graphical message
@@ -79,7 +79,7 @@ fi
 if ! $wine_executable python --version 2>/dev/null; then
     show_message "[5/7] Installing Python in Wine..."
     curl -L $python_url -o /tmp/python-installer.exe
-    $wine_executable /tmp/python-installer.exe /quiet InstallAllUsers=1 PrependPath=1
+    $wine_executable /tmp/python-installer.exe /quiet InstallAllUsers=1 PrependPath=1 TargetDir=c:\\python
     rm /tmp/python-installer.exe
     show_message "[5/7] Python installed in Wine."
 else
@@ -97,24 +97,18 @@ fi
 # Install mt5linux library in Windows if not installed
 show_message "[6/7] Checking and installing mt5linux library in Windows if necessary"
 if ! is_wine_python_package_installed "mt5linux"; then
-    $wine_executable python -m pip install --no-cache-dir mt5linux
-fi
-
-# Install mt5linux library in Linux if not installed
-show_message "[6/7] Checking and installing mt5linux library in Linux if necessary"
-if ! is_python_package_installed "mt5linux"; then
-    pip install --upgrade --no-cache-dir mt5linux
+    $wine_executable python -m pip install --no-cache-dir https://github.com/hpdeandrade/mt5linux/archive/refs/heads/master.zip
 fi
 
 # Install pyxdg library in Linux if not installed
 show_message "[6/7] Checking and installing pyxdg library in Linux if necessary"
 if ! is_python_package_installed "pyxdg"; then
-    pip install --upgrade --no-cache-dir pyxdg
+    pip install --upgrade --no-cache-dir --break-system-packages pyxdg
 fi
 
 # Start the MT5 server on Linux
 show_message "[7/7] Starting the mt5linux server..."
-python3 -m mt5linux --host 0.0.0.0 -p $mt5server_port -w $wine_executable python.exe &
+$wine_executable python -m mt5linux --host 0.0.0.0 -p $mt5server_port c:/python/python.exe &
 
 # Give the server some time to start
 sleep 5
